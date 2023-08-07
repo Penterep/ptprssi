@@ -38,7 +38,6 @@ class PtPrssi:
         self.redirects     = args.redirects
         self.cache         = args.cache
         self.timeout       = args.timeout
-        self.is_vulnerable = False
 
     def run(self, args) -> None:
         url = self._adjust_url(args.url)
