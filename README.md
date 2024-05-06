@@ -1,70 +1,65 @@
 [![penterepTools](https://www.penterep.com/external/penterepToolsLogo.png)](https://www.penterep.com/)
 
 
-# PTPRSSI
-> Path-relative style sheet import testing tool
+## PTPRSSI - Path-Relative Style Sheet Import Testing Tool
+
+ptprssi is a tool that tests domains for path relative style sheet import vulnerabilities. <br />
+This tool utilizes threading for fast parallel domain testing.
 
 ## Installation
 ```
 pip install ptprssi
 ```
 
-## Add to PATH
-If you cannot invoke the script in your terminal, its probably because its not in your PATH. Fix it by running commands below.
+## Adding to PATH
+If you're unable to invoke the script from your terminal, it's likely because it's not included in your PATH. You can resolve this issue by executing the following commands, depending on the shell you're using:
 
-> Add to PATH for Bash
+For Bash Users
 ```bash
 echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-> Add to PATH for ZSH
+For ZSH Users
 ```bash
-echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.zshhrc
-source ~/.zshhrc
+echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.zshrc
+source ~/.zshrc
 ```
 
 ## Usage examples
 ```
 ptprssi -u https://www.example.com/
-ptprssi -u https://www.example.com/ --redirects
+ptprssi -l domainList.txt
 ```
 
 ## Options
 ```
--u   --url         <url>           Connect to URL
--p   --proxy       <proxy>         Set proxy (e.g. http://127.0.0.1:8080)
--H   --headers     <header:value>  Set custom header(s)
--T   --timeout     <timeout>       Set timeout (default 10s)
--ua  --user-agent  <ua>            Set User-Agent header
--c   --cookie      <cookie>        Set cookie
--r   --redirects                   Follow redirects (default False)
--C   --cache                       Cache HTTP communication (load from tmp in future)
--v   --version                     Show script version and exit
--h   --help                        Show this help message and exit
--j   --json                        Output in JSON format
+-u  --url         <url>           Connect to URL
+-l  --list        <list>          Test list of domains
+-p  --proxy       <proxy>         Set proxy (e.g. http://127.0.0.1:8080)
+-T  --timeout     <timeout>       Set timeout (default 10s)
+-H  --headers     <header:value>  Set Header(s)
+-a  --user-agent  <agent>         Set User-Agent
+-c  --cookie      <cookie>        Set Cookie(s)
+-t  --threads     <threads>       Set threads count
+-r  --redirects                   Follow redirects (default False)
+-C  --cache                       Cache HTTP communication (load from tmp in future)
+-v  --version                     Show script version and exit
+-h  --help                        Show this help message and exit
+-j  --json                        Output in JSON format
+
 ```
 
 ## Dependencies
 ```
-requests
+ptlibs
 bs4
 lxml
-ptlibs
-```
-
-## Version History
-```
-1.0.0
-    - Code improvements
-    - Updated for ptlibs 1.0.0
-0.0.1 - 0.0.4
-    - Alpha releases
 ```
 
 ## License
 
-Copyright (c) 2023 Penterep Security s.r.o.
+Copyright (c) 2024 Penterep Security s.r.o.
 
 ptprssi is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
