@@ -47,7 +47,6 @@ ptprssi -l domainList.txt
 -v  --version                     Show script version and exit
 -h  --help                        Show this help message and exit
 -j  --json                        Output in JSON format
-
 ```
 
 ## Dependencies
