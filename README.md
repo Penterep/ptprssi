@@ -35,7 +35,7 @@ ptprssi -l domainList.txt
 ## Options
 ```
 -u  --url         <url>           Connect to URL
--l  --list        <list>          Test list of domains
+-f  --file        <file>          Load domains from file
 -p  --proxy       <proxy>         Set proxy (e.g. http://127.0.0.1:8080)
 -T  --timeout     <timeout>       Set timeout (default 10s)
 -H  --headers     <header:value>  Set Header(s)
@@ -44,6 +44,7 @@ ptprssi -l domainList.txt
 -t  --threads     <threads>       Set threads count
 -r  --redirects                   Follow redirects (default False)
 -C  --cache                       Cache HTTP communication (load from tmp in future)
+-V  --vulnerable                  Show vulnerable domains only
 -v  --version                     Show script version and exit
 -h  --help                        Show this help message and exit
 -j  --json                        Output in JSON format
@@ -58,7 +59,7 @@ lxml
 
 ## License
 
-Copyright (c) 2024 Penterep Security s.r.o.
+Copyright (c) 2025 Penterep Security s.r.o.
 
 ptprssi is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
