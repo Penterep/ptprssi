@@ -60,8 +60,11 @@ class PtPRSSI:
         ptmisclib.ptprint(self.ptjsonlib.get_result_json(), "", self.use_json)
 
     def get_urls_from_file(self, path_to_file: str):
-        with open(path_to_file, "r") as file:
-            domain_list = [line.strip("\n") for line in file]
+        try:
+            with open(path_to_file, "r") as file:
+                domain_list = [line.strip("\n") for line in file]
+        except FileNotFoundError:
+            self.ptjsonlib.end_error("Provided file does not exist", self.use_json)
         processed_domains = []
         for domain in domain_list:
             if "://" not in domain:
