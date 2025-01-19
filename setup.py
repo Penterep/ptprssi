@@ -29,6 +29,5 @@ setuptools.setup(
     "homepage":   "https://www.penterep.com/",
     "repository": "https://github.com/penterep/ptprssi",
     "tracker":    "https://github.com/penterep/ptprssi/issues",
-    "changelog":  "https://github.com/penterep/ptprssi/blob/main/CHANGELOG.md",
     }
 )
