@@ -44,7 +44,7 @@ ptprssi -l domainList.txt
 -t  --threads     <threads>       Set threads count
 -r  --redirects                   Follow redirects (default False)
 -C  --cache                       Cache HTTP communication (load from tmp in future)
--V  --vulnerable                  Show vulnerable domains only
+-V  --vulnerable                  Print only vulnerable domains
 -v  --version                     Show script version and exit
 -h  --help                        Show this help message and exit
 -j  --json                        Output in JSON format
