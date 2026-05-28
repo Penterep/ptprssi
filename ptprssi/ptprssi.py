@@ -93,38 +93,101 @@ class PtPRSSI:
                     break
         return url
 
-    def _test_for_prssi(self, url: str, printlock_object: object) -> None:
-        _is_vuln = False
+    def _test_for_prssi(self, url: str, print_lock: object) -> None:
+        """
+        Tests PRSSI (Path-Relative Style Sheet Import) vulnerability on the given URL.
+        Detects BASE URL and evaluates relative CSS paths accordingly.
+        """
+        is_vulnerable = False
+
+        response, response_dump = self._get_response(url, "")
+
+        # Iterate over payloads: empty for relative CSS, long path for absolute CSS
         for index, payload in enumerate(["", "/foo/foo/foo/foo/foo"]):
-            response, response_dump = self._get_response(url, payload)
-            if self.file_test and "text/html" not in response.headers.get('Content-Type', ""):
+            test_url = response.url + payload if payload else response.url
+            response_payload, response_dump_payload = self._get_response(test_url, "")
+            soup = BeautifulSoup(response_payload.text, "lxml")
+
+            # --- DETECT BASE URL ---
+            base_tag = soup.find("base", href=True)
+            effective_base = base_tag['href'] if base_tag else response_payload.url
+            if index == 0 and base_tag:
+                print_lock.add_string_to_output(
+                    ptprinthelper.out_ifnot(f"Detected BASE URL: {effective_base}", "INFO", self.use_json)
+                )
+
+            # Skip non-HTML responses in file mode
+            if self.file_test and "text/html" not in response_payload.headers.get('Content-Type', ""):
                 return
+
+            # Print header info for first iteration
             if index == 0 and not self.print_only_vulnerable_domains:
-                printlock_object.add_string_to_output(ptprinthelper.out_if(f" ", "", self.file_test))
-                printlock_object.add_string_to_output(ptprinthelper.out_ifnot(ptprinthelper.get_colored_text(f"Testing: {response.url} [{response.status_code}]", "TITLE"), "TITLE", self.use_json or self.print_only_vulnerable_domains))
+                print_lock.add_string_to_output(ptprinthelper.out_if(" ", "", self.file_test))
+                print_lock.add_string_to_output(
+                    ptprinthelper.out_ifnot(
+                        ptprinthelper.get_colored_text(f"Testing: {response_payload.url} [{response_payload.status_code}]", "TITLE"),
+                        "TITLE",
+                        self.use_json or self.print_only_vulnerable_domains
+                    )
+                )
 
-            soup = BeautifulSoup(response.text, "lxml")
-
+            # Collect all CSS links, including in HTML comments
             page_comments = soup.find_all(string=lambda text: isinstance(text, Comment))
-            css_in_page_comments = [match.group(1) for comment in page_comments for match in re.finditer(r'<link.*?rel=["\']stylesheet["\'].*?href=["\'](.*?)["\'].*?>', comment, re.IGNORECASE)]
-            page_css = [css.get("href") for css in soup.find_all("link", rel=re.compile(r"^stylesheet$", re.IGNORECASE))]
-            all_css = page_css + css_in_page_comments
-            vulnerable_css = [css for css in all_css if "foo" in css] if payload else [css for css in all_css if not css.startswith("/") and not css.startswith("http")]
+            css_in_comments = [
+                match.group(1)
+                for comment in page_comments
+                for match in re.finditer(r'<link.*?rel=["\']stylesheet["\'].*?href=["\'](.*?)["\'].*?>', comment, re.IGNORECASE)
+            ]
+            page_css = [link.get("href") for link in soup.find_all("link", rel=re.compile(r"^stylesheet$", re.IGNORECASE))]
+            all_css = page_css + css_in_comments
 
-            if self.print_only_vulnerable_domains:
-                if vulnerable_css and not _is_vuln:
-                    printlock_object.add_string_to_output(ptprinthelper.out_ifnot(url, "", self.use_json))
-
+            # Detect vulnerable CSS paths
+            if payload:
+                vulnerable_css = [urllib.parse.urljoin(effective_base, css) for css in all_css if "foo" in urllib.parse.urljoin(effective_base, css)]
             else:
-                printlock_object.add_string_to_output(ptprinthelper.out_ifnot(f" ", "", self.use_json))
-                printlock_object.add_string_to_output(ptprinthelper.out_ifnot(f"Vulnerable {'relative' if not payload else 'absolute'} CSS paths:", "TITLE", self.use_json))
+                vulnerable_css = [css for css in all_css if not css.startswith("/") and not css.startswith("http")]
+
+            # Handle output
+            if self.print_only_vulnerable_domains:
+                if vulnerable_css and not is_vulnerable:
+                    print_lock.add_string_to_output(ptprinthelper.out_ifnot(url, "", self.use_json))
+            else:
+                print_lock.add_string_to_output(ptprinthelper.out_ifnot(" ", "", self.use_json))
+                print_lock.add_string_to_output(
+                    ptprinthelper.out_ifnot(
+                        f"Vulnerable {'relative' if not payload else 'absolute'} CSS paths:",
+                        "TITLE",
+                        self.use_json
+                    )
+                )
                 if vulnerable_css:
-                    self.ptjsonlib.add_vulnerability(vuln_code=f"PTV-WEB-INJECT-PRSSIREL" if not payload else "PTV-WEB-INJECT-PRSSIABS", note=vulnerable_css, vuln_request=response_dump["request"], vuln_response=response_dump["response"])
+                    self.ptjsonlib.add_vulnerability(
+                        vuln_code=f"PTV-WEB-INJECT-PRSSIREL" if not payload else "PTV-WEB-INJECT-PRSSIABS",
+                        note=vulnerable_css,
+                        vuln_request=response_dump_payload["request"],
+                        vuln_response=response_dump_payload["response"]
+                    )
                     for css in vulnerable_css:
-                        printlock_object.add_string_to_output(ptprinthelper.out_ifnot(f"      {css}", "", self.use_json))
+                        print_lock.add_string_to_output(ptprinthelper.out_ifnot(f"      {css}", "", self.use_json))
                 else:
-                    printlock_object.add_string_to_output(ptprinthelper.out_ifnot(f"      None", "", self.use_json))
-            _is_vuln = vulnerable_css
+                    print_lock.add_string_to_output("    " + ptprinthelper.out_ifnot("Not vulnerable", "NOTVULN", self.use_json))
+            is_vulnerable = bool(vulnerable_css)
+
+
+    def _test_url_expandability(self, url: str) -> bool:
+        """
+        Tests if the URL can be safely extended with extra path segments without redirects or errors.
+        Returns True if expandable, False otherwise.
+        """
+        test_payload = "/foo/foo/foo/foo/foo"
+        try:
+            response, _ = self._get_response(url + test_payload, "")
+            if response.is_redirect or response.status_code >= 400:
+                return False
+            return True
+        except requests.RequestException:
+            return False
+
 
     def _adjust_url(self, url) -> str|None:
         if self.file_test:
